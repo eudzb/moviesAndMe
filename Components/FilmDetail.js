@@ -1,8 +1,9 @@
 import React from 'react'
-import { StyleSheet, View, Text, Image, ActivityIndicator, ScrollView } from 'react-native'
+import { StyleSheet, View, Text, Image, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native'
 import { getFilmDetailFromApi, getImageFromApi } from '../API/TMDBApi'
 import moment from 'moment'
 import numeral from 'numeral'
+import { connect } from 'react-redux'
 
 class FilmDetail extends React.Component {
 
@@ -24,6 +25,21 @@ class FilmDetail extends React.Component {
       })
   }
 
+  _toggleFavorite() {
+    const action = { type: 'TOGGLE_FAVORITE', value: this.state.film }
+    this.props.dispatch(action)
+  }
+
+  _displayFavoriteImage() {
+    var sourceImage = require('../img/not_fav.png')
+    if (this.props.favoritesFilm.findIndex(item => item.id === this.state.film.id) !== -1) {
+      sourceImage = require('../img/fav.png')
+    }
+    return (
+      <Image source={sourceImage} style={styles.favoriteImage}/>
+    )
+  }
+
   _displayFilm() {
     const film = this.state.film
     if (film != undefined) {
@@ -31,6 +47,11 @@ class FilmDetail extends React.Component {
         <ScrollView style={styles.scrollViewContainer}>
           <Image style={styles.movieImage} source={({uri: getImageFromApi(film.backdrop_path)})}/>
           <Text style={styles.movieTitle}>{film.title}</Text>
+          <TouchableOpacity
+            style={styles.favoriteContainer}
+            onPress={() => this._toggleFavorite()}>
+            {this._displayFavoriteImage()}
+          </TouchableOpacity>
           <Text style={styles.movieOverview}>{film.overview}</Text>
           <Text style={styles.movieDetails}>Sorti le {moment(new Date(film.release_date)).format('DD/MM/YYYY')}</Text>
           <Text style={styles.movieDetails}>Note : {film.vote_average} / 10</Text>
@@ -117,7 +138,19 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     marginRight: 8,
     marginBottom: 4
+  },
+  favoriteContainer: {
+    alignItems: 'center'
+  },
+  favoriteImage: {
+    width: 40,
+    height: 40
   }
 })
 
-export default FilmDetail
+const mapStateToProps = (state) => {
+  return {
+    favoritesFilm: state.favoritesFilm
+  }
+}
+export default connect(mapStateToProps)(FilmDetail)

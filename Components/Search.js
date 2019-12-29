@@ -1,7 +1,9 @@
 import React from 'react'
-import { StyleSheet, View, Button, TextInput, FlatList, Text, ActivityIndicator} from 'react-native'
+import { StyleSheet, View, Button, TextInput, FlatList, Text, ActivityIndicator } from 'react-native'
 import FilmItem from './FilmItem'
+import FilmList from './FilmList'
 import { getFilmsFromApiWithSearchedText } from '../API/TMDBApi'
+import { connect } from 'react-redux'
 
 class Search extends React.Component {
 
@@ -9,11 +11,12 @@ class Search extends React.Component {
     super(props)
     this.page = 0
     this.totalPages = 0
+    this.searchedText = ''
     this.state = {
       films: [],
       isLoading: false
     }
-    this.searchedText = ''
+    this._loadFilms = this._loadFilms.bind(this)
   }
 
   _loadFilms() {
@@ -67,16 +70,12 @@ class Search extends React.Component {
           onSubmitEditing={() => this._searchFilms()}
           onChangeText={(text) => this._searchedTextInputChanged(text)}/>
         <Button style={styles.buttonSearch} title="Rechercher" onPress={ () => this._searchFilms() }/>
-        <FlatList
-          data={this.state.films}
-          keyExtractor={(item) => item.id.toString()}
-          onEndReachThreashold={0.5}
-          onEndReached={() => {
-            if (this.page < this.totalPages) {
-              this._loadFilms()
-            }
-          }}
-          renderItem={({item}) => <FilmItem film={item} displayDetailForFilm={this._displayDetailForFilm} />}
+        <FilmList
+          films={this.state.films} // C'est bien le component Search qui récupère les films depuis l'API et on les transmet ici pour que le component FilmList les affiche
+          navigation={this.props.navigation} // Ici on transmet les informations de navigation pour permettre au component FilmList de naviguer vers le détail d'un film
+          loadFilms={this._loadFilms} // _loadFilm charge les films suivants, ça concerne l'API, le component FilmList va juste appeler cette méthode quand l'utilisateur aura parcouru tous les films et c'est le component Search qui lui fournira les films suivants
+          page={this.page}
+          totalPages={this.totalPages} // les infos page et totalPages vont être utile, côté component FilmList, pour ne pas déclencher l'évènement pour charger plus de film si on a atteint la dernière page
         />
         {this._displayLoading()}
       </View>
@@ -110,4 +109,11 @@ const styles = StyleSheet.create({
   }
 });
 
-export default Search
+// On connecte le store Redux, ainsi que les films favoris du state de notre application, à notre component Search
+const mapStateToProps = state => {
+  return {
+    favoritesFilm: state.favoritesFilm
+  }
+}
+
+export default connect(mapStateToProps)(Search)

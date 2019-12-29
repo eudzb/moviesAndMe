@@ -4,6 +4,19 @@ import { getImageFromApi } from '../API/TMDBApi'
 import moment from 'moment'
 
 class FilmItem extends React.Component {
+
+  _displayFavoriteImage() {
+   if (this.props.isFilmFavorite) {
+     // Si la props isFilmFavorite vaut true, on affiche l'img
+     return (
+       <Image
+         style={styles.favoriteImage}
+         source={require('../img/fav.png')}
+       />
+     )
+   }
+  }
+
   render() {
     const { film, displayDetailForFilm } = this.props
     return (
@@ -13,6 +26,7 @@ class FilmItem extends React.Component {
         <Image style={styles.imageContent} source={({uri: getImageFromApi(film.poster_path)})}/>
         <View style={styles.detailsContainer}>
           <View style={styles.detailsHeader}>
+            {this._displayFavoriteImage()}
             <Text style={styles.movieTitle}>{film.title}</Text>
             <Text style={styles.movieVote}>{film.vote_average}</Text>
           </View>
@@ -83,6 +97,11 @@ const styles = StyleSheet.create({
   movieDateText: {
     padding: 3,
     textAlign: 'right'
+  },
+  favoriteImage: {
+    margin: 3,
+    height: 25,
+    width: 25
   }
 })
 
